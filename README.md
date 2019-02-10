@@ -32,6 +32,7 @@ A cross platform plugin for displaying local notifications.
     * Big picture
     * Big text
     * Inbox
+    * Messaging
 * [Android] Group notifications
 * [Android] Show progress notifications
 * [iOS] Customise the permissions to be requested around displaying notifications
@@ -44,7 +45,7 @@ Note that this plugin aims to provide abstractions for all platforms as opposed 
 ## Acknowledgements
 
 * [Javier Lecuona](https://github.com/javiercbk) for submitting the PR that added the ability to have notifications shown daily
-* [Jeff Scaturro](https://github.com/JeffScaturro) for submitting the PR to fix the iOS issue around showing daily and weekly notifications
+* [Jeff Scaturro](https://github.com/JeffScaturro) for submitting the PR to fix the iOS issue around showing daily and weekly notifications and migrating the plugin to AndroidX
 * [Ian Cavanaugh](https://github.com/icavanaugh95) for helping create a sample to reproduce the problem reported in [issue #88](https://github.com/MaikuB/flutter_local_notifications/issues/88)
 
 ## Raising issues and contributions
@@ -296,28 +297,6 @@ Notification icons should be added as a drawable resource. The example project/c
 When specifying the large icon bitmap or big picture bitmap (associated with the big picture style), bitmaps can be either a drawable resource or file on the device. This is specified via a single property (e.g. the `largeIcon` property associated with the `AndroidNotificationDetails` class) and there will be a corresponding property of the `BitmapSource` enum type (e.g. `largeIconBitmapSource`) that indicates if the string value represents the name of the drawable resource or the path to the bitmap file.
 
 Note that with Android 8.0+, sounds and vibrations are associated with notification channels and can only be configured when they are first created. Showing/scheduling a notification will create a channel with the specified id if it doesn't exist already. If another notification specifies the same channel id but tries to specify another sound or vibration pattern then nothing occurs.
-
-If you run into error messages around the `com.android.support:support-compat` library due to version conflicts, you can try adding the following to the `build.gradle` file of your Android head project as reported by another dev [here](https://github.com/MaikuB/flutter_local_notifications/issues/5)
-
-```gradle
-allprojects {
-    repositories {
-       //...
-    }
-    subprojects {
-        project.configurations.all {
-            resolutionStrategy.eachDependency { details ->
-                if (details.requested.group == 'com.android.support'
-                        && !details.requested.name.contains('multidex') ) {
-                    details.useVersion "27.1.1"
-                }
-            }
-        }
-    }
-}
-```
-
-Note though this will force other plugins to use the same version of the library that this plugin depends on so may not be desirable. If you have another suggestion on how to solve this please do let me know :)
 
 When doing a release build of your app, you'll likely need to customise your ProGuard configuration file as per this [link](https://developer.android.com/studio/build/shrink-code#keep-code) and add the following line
 
