@@ -1,3 +1,13 @@
+# [0.5.2]
+* Fix for when multiple isolates use the plugin. Thanks to PR submitted by xtelinco
+* Added the `channelAction` field to the `AndroidNotificationDetails` class. This provides options for managing notification channels on Android. Default behaviour is to create the notification channel if it doesn't exist (which was what it it use to do). Another option is to update the details of the notification channel. Example app has been updated to demonstrate how to update a notification channel when sending a notification
+
+# [0.5.1+2]
+* Highlight note on migrating to AndroidX more in README
+
+# [0.5.1+1]
+* README corrections and add information on migrating to AndroidX
+
 # [0.5.1]
 * Updated gradle plugin of example app to 3.3.1
 * Added support for messaging style notifications on Android as requested in issue [159](https://github.com/MaikuB/flutter_local_notifications/issues/159). See example app for some sample code
