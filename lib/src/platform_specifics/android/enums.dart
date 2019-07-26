@@ -1,5 +1,3 @@
-part of flutter_local_notifications;
-
 /// Specifies the source for a bitmap used by Android notifications.
 enum BitmapSource { Drawable, FilePath }
 
@@ -49,3 +47,6 @@ class Priority {
 
 /// The available alert behaviours for grouped notifications
 enum GroupAlertBehavior { All, Summary, Children }
+
+/// The precision of scheduled notifications on android
+enum ScheduledAndroidNotificationPrecision { Exact, ExactAndAllowWhileIdle, Inexact, InexactAndAllowWhileIdle }

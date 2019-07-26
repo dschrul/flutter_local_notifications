@@ -1,6 +1,7 @@
 # Flutter Local Notifications Plugin
 
 [![pub package](https://img.shields.io/pub/v/flutter_local_notifications.svg)](https://pub.dartlang.org/packages/flutter_local_notifications)
+[![Build Status](https://api.cirrus-ci.com/github/MaikuB/flutter_local_notifications.svg)](https://cirrus-ci.com/github/MaikuB/flutter_local_notifications/master)
 
 A cross platform plugin for displaying local notifications. 
 
@@ -16,6 +17,7 @@ A cross platform plugin for displaying local notifications.
 * Periodically show a notification (interval based)
 * Schedule a notification to be shown daily at a specified time
 * Schedule a notification to be shown weekly on a specified day and time
+* Retrieve a list of pending notification requests that have been scheduled to be shown in the future
 * Cancelling/removing notification by id or all of them
 * Specify a custom notification sound
 * Ability to handle when a user has tapped on a notification, when the app is the foreground, background or terminated
@@ -38,14 +40,19 @@ A cross platform plugin for displaying local notifications.
 
 Note that this plugin aims to provide abstractions for all platforms as opposed to having methods that only work on specific platforms. However, each method allows passing in "platform-specifics" that contains data that is specific for customising notifications on each platform. It is still under development so expect the API surface to change over time.
 
-**IMPORTANT**: Recurring notifications on Android use the [Alarm Manager](https://developer.android.com/reference/android/app/AlarmManager) API. This is standard practice but does mean the delivery of the notifications/alarms are inexact and this is documented Android behaviour as per the previous link.
+**IMPORTANT NOTES**:
 
+* Recurring notifications on Android use the [Alarm Manager](https://developer.android.com/reference/android/app/AlarmManager) API. This is standard practice but does mean the delivery of the notifications/alarms are inexact and this is documented Android behaviour as per the previous link. Note that it's been reported that Samsung's implementation of Android has imposed a maximum of 500 alarms that can be scheduled via this API and exceptioms can occur when going over the limit
+* iOS has a limit on how many pending notifications it allows. This is a limit imposed by iOS where it will only keep 64 notifications that will fire the soonest
+* *Known issue*: There is a known issue with handling daylight savings for scheduled notifications. This functionality may be deprecated to be replaced by another that only deals with elapsed time since epoch instead of a date.
 
 ## Acknowledgements
 
 * [Javier Lecuona](https://github.com/javiercbk) for submitting the PR that added the ability to have notifications shown daily
 * [Jeff Scaturro](https://github.com/JeffScaturro) for submitting the PR to fix the iOS issue around showing daily and weekly notifications and migrating the plugin to AndroidX
 * [Ian Cavanaugh](https://github.com/icavanaugh95) for helping create a sample to reproduce the problem reported in [issue #88](https://github.com/MaikuB/flutter_local_notifications/issues/88)
+* [Zhang Jing](https://github.com/byrdkm17) for adding 'ticker' support for Android notifications
+* ...and everyone else for their contributions. They are greatly appreciated
 
 ## Raising issues and contributions
 
@@ -65,7 +72,7 @@ FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = new FlutterLoc
 var initializationSettingsAndroid =
     new AndroidInitializationSettings('app_icon');
 var initializationSettingsIOS = new IOSInitializationSettings(
-    onDidReceiveLocalNotification: onDidRecieveLocationLocation);
+    onDidReceiveLocalNotification: onDidReceiveLocalNotification);
 var initializationSettings = new InitializationSettings(
     initializationSettingsAndroid, initializationSettingsIOS);
 flutterLocalNotificationsPlugin.initialize(initializationSettings,
@@ -91,18 +98,18 @@ In the real world, this payload could represent the id of the item you want to d
 ### Displaying a notification
 
 ```dart
-var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+var androidPlatformChannelSpecifics = AndroidNotificationDetails(
     'your channel id', 'your channel name', 'your channel description',
-    importance: Importance.Max, priority: Priority.High);
-var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
-var platformChannelSpecifics = new NotificationDetails(
+    importance: Importance.Max, priority: Priority.High, ticker: 'ticker');
+var iOSPlatformChannelSpecifics = IOSNotificationDetails();
+var platformChannelSpecifics = NotificationDetails(
     androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
 await flutterLocalNotificationsPlugin.show(
     0, 'plain title', 'plain body', platformChannelSpecifics,
-    payload: 'item id 2');
+    payload: 'item x');
 ```
 
-In this block of code, the details for each platform have been specified. This includes the channel details that is required for Android 8.0+. The payload has been specified ('item id 2'), that will passed back through your application when the user has tapped on a notification. Note that for Android devices that notifications will only in appear in the tray and won't appear as a toast aka heads-up notification unless things like the priority/importance has been set appropriately. Refer to the Android docs (https://developer.android.com/guide/topics/ui/notifiers/notifications.html#Heads-up) for additional information.
+In this block of code, the details for each platform have been specified. This includes the channel details that is required for Android 8.0+. The payload has been specified ('item id 2'), that will passed back through your application when the user has tapped on a notification. Note that for Android devices that notifications will only in appear in the tray and won't appear as a toast aka heads-up notification unless things like the priority/importance has been set appropriately. Refer to the Android docs (https://developer.android.com/guide/topics/ui/notifiers/notifications.html#Heads-up) for additional information. Note that the "ticker" text is passed here though it is optional and specific to Android. This allows for text to be shown in the status bar on older versions of Android when the notification is shown.
 
 ### Scheduling a notification
 
@@ -123,6 +130,8 @@ await flutterLocalNotificationsPlugin.schedule(
     scheduledNotificationDateTime,
     platformChannelSpecifics);
 ```
+
+Note that on Android devices, the default behaviour is that the notification may not be delivered at the specified time when the device in a low-power idle mode. This behaviour can be changed by setting the optional parameter named `androidAllowWhileIdle` to true when calling the `schedule` method.
 
 ### Periodically show a notification with a specified interval
 
@@ -176,6 +185,13 @@ await flutterLocalNotificationsPlugin.showWeeklyAtDayAndTime(
     Day.Monday,
     time,
     platformChannelSpecifics);
+```
+
+### Retrieve pending notification requests
+
+```dart
+var pendingNotificationRequests =
+        await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 ```
 
 ### [Android only] Grouping notifications
@@ -314,7 +330,7 @@ By design, iOS applications do not display notifications when they're in the for
 var initializationSettingsAndroid =
     new AndroidInitializationSettings('app_icon');
 var initializationSettingsIOS = new IOSInitializationSettings(
-    onDidReceiveLocalNotification: onDidRecieveLocalNotification);
+    onDidReceiveLocalNotification: onDidReceiveLocalNotification);
 var initializationSettings = new InitializationSettings(
     initializationSettingsAndroid, initializationSettingsIOS);
 flutterLocalNotificationsPlugin.initialize(initializationSettings,
@@ -322,7 +338,7 @@ flutterLocalNotificationsPlugin.initialize(initializationSettings,
 
 ...
 
-  Future onDidRecieveLocalNotification(
+  Future onDidReceiveLocalNotification(
       int id, String title, String body, String payload) async {
     // display a dialog with the notification details, tap ok to go to another page
     showDialog(

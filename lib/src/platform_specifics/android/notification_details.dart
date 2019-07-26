@@ -1,4 +1,10 @@
-part of flutter_local_notifications;
+import 'dart:typed_data';
+import 'dart:ui';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+import 'enums.dart';
+import 'styles/style_information.dart';
+import 'styles/default_style_information.dart';
 
 /// Configures the notification on Android
 class AndroidNotificationDetails {
@@ -31,6 +37,9 @@ class AndroidNotificationDetails {
 
   /// Indicates if vibration should be enabled when the notification is displayed. For Android 8.0+, this is tied to the specified channel cannot be changed afterward the channel has been created for the first time.
   bool enableVibration;
+
+  /// Indicates if lights should be enabled when the notification is displayed. For Android 8.0+, this is tied to the specified channel cannot be changed afterward the channel has been created for the first time.
+  bool enableLights;
 
   /// The vibration pattern. Requires setting [enableVibration] to true for it to work. For Android 8.0+, this is tied to the specified channel cannot be changed afterward the channel has been created for the first time.
   Int64List vibrationPattern;
@@ -80,6 +89,18 @@ class AndroidNotificationDetails {
   /// Specifies if an indeterminate progress bar will be shown
   bool indeterminate;
 
+  /// Sets the light color of the notification. For Android 8.0+, this is tied to the specified channel cannot be changed afterward the channel has been created for the first time.
+  Color ledColor;
+
+  /// Sets how long the light colour will remain on. Not applicable for Android 8.0+
+  int ledOnMs;
+
+  /// Sets how long the light colour will remain off. Not applicable for Android 8.0+
+  int ledOffMs;
+
+  /// Set the "ticker" text which is sent to accessibility services.
+  String ticker;
+
   /// The action to take for managing notification channels. Defaults to creating the notification channel using the provided details if it doesn't exist
   AndroidNotificationChannelAction channelAction;
 
@@ -108,7 +129,12 @@ class AndroidNotificationDetails {
       this.maxProgress = 0,
       this.progress = 0,
       this.indeterminate = false,
-      this.channelAction = AndroidNotificationChannelAction.CreateIfNotExists});
+      this.channelAction = AndroidNotificationChannelAction.CreateIfNotExists,
+      this.enableLights = false,
+      this.ledColor,
+      this.ledOnMs,
+      this.ledOffMs,
+      this.ticker});
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
@@ -126,7 +152,7 @@ class AndroidNotificationDetails {
       'vibrationPattern': vibrationPattern,
       'style': style.index,
       'styleInformation': styleInformation == null
-          ? new DefaultStyleInformation(false, false).toMap()
+          ? DefaultStyleInformation(false, false).toMap()
           : styleInformation.toMap(),
       'groupKey': groupKey,
       'setAsGroupSummary': setAsGroupSummary,
@@ -143,7 +169,15 @@ class AndroidNotificationDetails {
       'showProgress': showProgress,
       'maxProgress': maxProgress,
       'progress': progress,
-      'indeterminate': indeterminate
+      'indeterminate': indeterminate,
+      'enableLights': enableLights,
+      'ledColorAlpha': ledColor?.alpha,
+      'ledColorRed': ledColor?.red,
+      'ledColorGreen': ledColor?.green,
+      'ledColorBlue': ledColor?.blue,
+      'ledOnMs': ledOnMs,
+      'ledOffMs': ledOffMs,
+      'ticker': ticker
     };
   }
 }
